@@ -1,0 +1,28 @@
+# --- Anchor program ignore ---
+
+# Anchor build output
+target/
+!target/idl/
+!target/types/
+
+# Anchor local state
+.anchor/
+test-ledger/
+
+app/
+node_modules/
+
+yarn.lock
+
+# Rust backup files
+**/*.rs.bk
+
+# OS junk
+.DS_Store
+
+# Do NOT commit Solana keypairs
+id.json
+payer.json
+
+*keypair.json
+
