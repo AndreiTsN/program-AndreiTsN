@@ -14,15 +14,20 @@ type RecipientForm = {
   share: number;
 };
 
+// Функция, которая каждый раз возвращает НОВЫЙ массив и НОВЫЕ объекты
+const createInitialRecipients = (): RecipientForm[] => [
+  { wallet: "", share: 1 },
+  { wallet: "", share: 1 },
+];
+
 function App() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
   const anchorWallet = useAnchorWallet();
 
-  const [recipients, setRecipients] = useState<RecipientForm[]>([
-    { wallet: "", share: 1 },
-    { wallet: "", share: 1 },
-  ]);
+  const [recipients, setRecipients] = useState<RecipientForm[]>(() =>
+    createInitialRecipients()
+  );
 
   const [splitterPda, setSplitterPda] = useState<PublicKey | null>(null);
   const [pdaBalance, setPdaBalance] = useState<number | null>(null);
@@ -213,9 +218,11 @@ function App() {
         })
         .rpc();
 
-      setStatus("Splitter closed");
+      setStatus("Splitter closed. Configure a new one above.");
       setOnChainRecipients([]);
       setPdaBalance(null);
+      setSplitterPda(null);
+      setRecipients(createInitialRecipients());
     } catch (e: any) {
       console.error(e);
       setStatus(
