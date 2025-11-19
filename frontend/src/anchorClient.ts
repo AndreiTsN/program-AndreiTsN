@@ -4,7 +4,6 @@ import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import idl from "./idl_anchor_project.json";
 
-
 export const PROGRAM_ID = new PublicKey(
   // @ts-ignore
   (idl as any).address
@@ -22,14 +21,16 @@ export function getProgram(connection: Connection, wallet: any) {
   });
 
   setProvider(provider);
-  
+
   return new Program(idl as Idl, provider as any) as any;
 }
 
-// PDA сплиттера: seeds = ["splitter", authority]
+// ✅ PDA сплиттера без Buffer: seeds = ["splitter", authority]
 export function getSplitterPda(authority: PublicKey): PublicKey {
+  const seed = new TextEncoder().encode("splitter"); // Uint8Array
+
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("splitter"), authority.toBuffer()],
+    [seed, authority.toBuffer()], // authority.toBuffer() ок, это внутри web3.js
     PROGRAM_ID
   );
   return pda;
