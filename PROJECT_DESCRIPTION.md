@@ -1,6 +1,6 @@
 # Project Description
 
-**Deployed Frontend URL:** https://MY_FRONTEND_URL_WILL_BE_HERE!!!
+**Deployed Frontend URL:** https://squid-app-xkwp6.ondigitalocean.app/
 
 **Solana Program ID:** 5u8KdFByQxwVdc6orGV5gUJL5avYc5VFvgfSj1eXD2Pw  
 
