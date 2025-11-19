@@ -1,12 +1,12 @@
 // src/App.tsx
-import React, { useCallback, useEffect, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useCallback, useEffect, useState } from "react";
 import {
-  getProgram,
-  getSplitterPda,
-  SystemProgram,
-} from "./anchorClient";
+  useConnection,
+  useWallet,
+  useAnchorWallet,
+} from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { getProgram, getSplitterPda, SystemProgram } from "./anchorClient";
 import { PublicKey, LAMPORTS_PER_SOL, Transaction } from "@solana/web3.js";
 
 type RecipientForm = {
@@ -17,6 +17,7 @@ type RecipientForm = {
 function App() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected } = useWallet();
+  const anchorWallet = useAnchorWallet();
 
   const [recipients, setRecipients] = useState<RecipientForm[]>([
     { wallet: "", share: 1 },
@@ -32,9 +33,9 @@ function App() {
   const [status, setStatus] = useState<string>("");
 
   const refreshState = useCallback(async () => {
-    if (!publicKey) return;
+    if (!publicKey || !anchorWallet) return;
     try {
-      const program = getProgram();
+      const program = getProgram(connection, anchorWallet) as any;
       const pda = getSplitterPda(publicKey);
       setSplitterPda(pda);
 
@@ -55,13 +56,17 @@ function App() {
     } catch (e) {
       console.error(e);
     }
-  }, [publicKey, connection]);
+  }, [publicKey, anchorWallet, connection]);
 
   useEffect(() => {
     refreshState();
   }, [refreshState]);
 
-  const handleRecipientChange = (index: number, field: "wallet" | "share", value: string) => {
+  const handleRecipientChange = (
+    index: number,
+    field: "wallet" | "share",
+    value: string
+  ) => {
     setRecipients((prev) => {
       const copy = [...prev];
       if (field === "wallet") {
@@ -78,14 +83,14 @@ function App() {
   };
 
   const handleInitialize = async () => {
-    if (!publicKey) {
+    if (!publicKey || !anchorWallet) {
       setStatus("Connect wallet first");
       return;
     }
     setLoading(true);
     setStatus("Initializing splitter...");
     try {
-      const program = getProgram();
+      const program = getProgram(connection, anchorWallet) as any;
       const splitterPda = getSplitterPda(publicKey);
 
       const validRecipients = recipients
@@ -148,7 +153,7 @@ function App() {
   };
 
   const handleDistribute = async () => {
-    if (!publicKey || !splitterPda) {
+    if (!publicKey || !splitterPda || !anchorWallet) {
       setStatus("Need wallet and splitter first");
       return;
     }
@@ -159,7 +164,7 @@ function App() {
     setLoading(true);
     setStatus("Distributing funds...");
     try {
-      const program = getProgram();
+      const program = getProgram(connection, anchorWallet) as any;
 
       const remainingAccounts = onChainRecipients.map((r) => ({
         pubkey: new PublicKey(r.wallet),
@@ -191,14 +196,14 @@ function App() {
   };
 
   const handleClose = async () => {
-    if (!publicKey || !splitterPda) {
+    if (!publicKey || !splitterPda || !anchorWallet) {
       setStatus("Need wallet and splitter first");
       return;
     }
     setLoading(true);
     setStatus("Closing splitter...");
     try {
-      const program = getProgram();
+      const program = getProgram(connection, anchorWallet) as any;
 
       await program.methods
         .close()

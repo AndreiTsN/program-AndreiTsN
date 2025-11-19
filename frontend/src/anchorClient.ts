@@ -1,35 +1,42 @@
 // src/anchorClient.ts
-import * as anchor from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import type { Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import idl from "./idl_anchor_project.json";
 
-// Program ID: from declare_id! or IDL metadata.address
+// Берём Program ID из IDL (сначала address, потом metadata.address как fallback)
 export const PROGRAM_ID = new PublicKey(
   // @ts-ignore
-  (idl as any).metadata?.address ?? "5u8KdFByQxwVdc6orGV5gUJL5avYc5VFvgfSj1eXD2Pw"
+  (idl as any).address ??
+    // @ts-ignore
+    (idl as any).metadata?.address ??
+    "5u8KdFByQxwVdc6orGV5gUJL5avYc5VFvgfSj1eXD2Pw"
 );
 
-export const SPLITTER_SEED = "splitter";
+// Реэкспортируем SystemProgram, чтобы можно было импортировать из anchorClient
+export { SystemProgram };
 
-export function getProvider(): anchor.AnchorProvider {
-  const provider = anchor.getProvider();
-  if (!provider) {
-    throw new Error("Anchor provider not set");
+// Возвращаем Program; ослабляем типизацию до any, чтобы не бороться с generic-ами Idl
+export function getProgram(connection: Connection, wallet: any) {
+  if (!wallet) {
+    throw new Error("Wallet not connected");
   }
-  return provider as anchor.AnchorProvider;
+
+  const provider = new AnchorProvider(connection, wallet, {
+    preflightCommitment: "processed",
+  });
+
+  setProvider(provider);
+
+  // Приводим к any, чтобы TS не ругался на сигнатуру конструктора Program
+  return new Program(idl as Idl, PROGRAM_ID as any, provider as any) as any;
 }
 
-export function getProgram(): anchor.Program {
-  const provider = getProvider();
-  return new anchor.Program(idl as anchor.Idl, PROGRAM_ID, provider);
-}
-
+// PDA сплиттера: seeds = ["splitter", authority]
 export function getSplitterPda(authority: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from(SPLITTER_SEED), authority.toBuffer()],
+    [Buffer.from("splitter"), authority.toBuffer()],
     PROGRAM_ID
   );
   return pda;
 }
-
-export { SystemProgram };

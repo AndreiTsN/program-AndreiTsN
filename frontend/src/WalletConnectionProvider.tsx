@@ -1,5 +1,6 @@
 // src/WalletConnectionProvider.tsx
-import React, { FC, ReactNode, useMemo } from "react";
+import type { FC, ReactNode } from "react";
+import { useMemo } from "react";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -17,7 +18,6 @@ interface Props {
 }
 
 export const WalletConnectionProvider: FC<Props> = ({ children }) => {
-  
   const endpoint = "https://api.devnet.solana.com";
 
   const wallets = useMemo(
@@ -27,7 +27,7 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets}>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
